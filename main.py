@@ -2,11 +2,20 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
 from database import SessionLocal, engine
 from models import Todos
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 Todos.metadata.create_all(bind=engine)
 
