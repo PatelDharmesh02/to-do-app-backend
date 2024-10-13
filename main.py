@@ -24,6 +24,10 @@ class TodoResponse(BaseModel):
     description: str
     completed: bool
     
+    
+class TodoAdd(BaseModel):
+    description: str
+    completed: bool
 
 
 def get_db():
@@ -38,3 +42,13 @@ def get_db():
 def get_todos(db: Session = Depends(get_db)):
     todos = db.query(Todos).all()
     return todos
+@app.post("/add_todo", response_model=TodoResponse)
+def add_todo(todo: TodoAdd, db: Session = Depends(get_db)):
+    db_todo = Todos(
+        description=todo.description,
+        completed=todo.completed
+    )
+    db.add(db_todo)
+    db.commit()
+    db.refresh(db_todo)
+    return db_todo
