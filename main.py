@@ -52,3 +52,13 @@ def add_todo(todo: TodoAdd, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_todo)
     return db_todo
+
+@app.delete("/delete_todo/{id}")
+def delete_todo(id: int, db: Session = Depends(get_db)):
+    todo = db.query(Todos).filter(Todos.id == id).first()
+    if not todo:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    db.delete(todo)
+    db.commit()
+    return {"status_code": 200, "detail": "Task deleted successfully!"}
+    

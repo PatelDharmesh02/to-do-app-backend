@@ -6,7 +6,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
+ENV = os.getenv("ENV")
+
+if(ENV == "development"):
+    SQLALCHEMY_DATABASE_URL = os.getenv("DEV_DATABASE_URL")
+else: 
+    SQLALCHEMY_DATABASE_URL = os.getenv("PROD_DATABASE_URL")
 
 
 engine = create_engine(
