@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import SessionLocal, engine
-from models import Todos
+from models import Todos, TodoResponse, TodoAdd, TodoEditDescription, TodoEditStatus
 
 app = FastAPI()
 
@@ -19,16 +19,6 @@ app.add_middleware(
 
 Todos.metadata.create_all(bind=engine)
 
-class TodoResponse(BaseModel):
-    id: int
-    description: str
-    completed: bool
-    
-    
-class TodoAdd(BaseModel):
-    description: str
-    completed: bool
-
 
 def get_db():
     db = SessionLocal()
@@ -40,8 +30,9 @@ def get_db():
 
 @app.get("/get_todos", response_model=List[TodoResponse])
 def get_todos(db: Session = Depends(get_db)):
-    todos = db.query(Todos).all()
+    todos = db.query(Todos).order_by(Todos.id).all()
     return todos
+
 @app.post("/add_todo", response_model=TodoResponse)
 def add_todo(todo: TodoAdd, db: Session = Depends(get_db)):
     db_todo = Todos(
@@ -62,3 +53,26 @@ def delete_todo(id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"status_code": 200, "detail": "Task deleted successfully!"}
     
+@app.patch("/edit_todo_descr/{id}")
+def edit_todo(id: int, todo: TodoEditDescription, db = Depends(get_db)):
+    db_todo = db.query(Todos).filter(Todos.id == id).first()
+    
+    if not db_todo:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    
+    db_todo.description = todo.description
+    db.commit()
+    db.refresh(db_todo)
+    return { "status_code": 200, "detail": "Todo description changed successfully!"}
+
+@app.patch("/edit_todo_status/{id}")
+def edit_todo(id: int, todo: TodoEditStatus, db = Depends(get_db)):
+    db_todo = db.query(Todos).filter(Todos.id == id).first()
+    
+    if not db_todo:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    
+    db_todo.completed = todo.completed
+    db.commit()
+    db.refresh(db_todo)
+    return { "status_code": 200, "detail": "Todo status changed successfully!"}
